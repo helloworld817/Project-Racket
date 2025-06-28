@@ -1,6 +1,8 @@
 #lang racket
 
 (define database (make-parameter '()))
+(define dummy (make-parameter '()))
+(define future-ref (make-parameter '()))
 
 (define band%
   (class object%
@@ -12,7 +14,11 @@
        (cons this (database))))
     ;;getter
     (define/public get-band (λ () band-name))
-    (define/public get-pass (λ () (password)))
+    (define/public get-pass (λ () password))
+    (define/public get-date (λ () date))
+    (define/public get-cost (λ () cost))
+    (define/public get-venue (λ () venue))
+    (define/public get-time (λ () time))
 
     ;;setters
     (define/public set-venue (λ (v) (set! venue v)))
@@ -32,17 +38,52 @@
                                                            (void))))
 
                   (database)))
-                                                        
-    (define/public (summary)
-  (format "~a @ ~a on ~a ~a | $~a | pass: ~a"
-          band-name venue date time cost password))                   
-                        
+    (super-new)))
+  
+(define people%
+  (class object%
+    (init-field name surename)
+
+    (define/public (search name date cost venue time)
+      (let ((result
+             (filter
+       (λ (b)
+         (and
+          (if (not (string=? name "")) (string=? (send b get-band) name) (void))
+          (if (not (string=? date "")) (string=? (send b get-date) date) (void))
+          (if (not (string=? cost)) (string=? (send b get-cost) cost) (void))
+          (if (not (string=? venue "")) (string=? (send b get-venue) venue) (void))
+          (if (not (string=? time "")) (string=? (send b get-time) time) (void))))
+       (database))))
+        (dummy (append (dummy) result)))
+      result)))
+      
+    (define/public (add-item name date cost venue time)
+      (cons 
     (super-new)))
 
+    
+          
+
+    
+    
+                                                        
 
 
-(define p (new band% [band-name "A"] [date "12/01/2025"] [time "12"] [venue "London"] [cost 12] [password "123"]))
+
+(define p (new band% [band-name "A"] [date "12/09/2025"] [time "12"] [venue "London"] [cost 12] [password "123"]))
 (define a (new band% [band-name "B"] [date "12/09/2025"] [time "10"] [venue "Paris"] [cost 800] [password "124"]))
 
 (send p edit "A" "Madrid" "" "" "22")
-(map (λ (b) (send b summary)) (database))
+
+(define user1 (new people% [name "ramtin"] [surename "lll"]))
+(define results (send user1 search "" "12/09/2025" "" "" ""))
+
+(map (λ (b)
+       (list (send b get-band)
+             (send b get-date)
+             (send b get-time)
+             (send b get-venue)
+             (send b get-cost)
+             (send b get-pass)))
+     results)
