@@ -45,21 +45,36 @@
     (init-field name surename)
 
     (define/public (search name date cost venue time)
-      (let ((result
-             (filter
+
+       (let ([result
+              (filter
        (λ (b)
          (and
           (if (not (string=? name "")) (string=? (send b get-band) name) (void))
           (if (not (string=? date "")) (string=? (send b get-date) date) (void))
-          (if (not (string=? cost)) (string=? (send b get-cost) cost) (void))
+          (if (number? cost) (equal? (send b get-cost) cost) (void))
           (if (not (string=? venue "")) (string=? (send b get-venue) venue) (void))
           (if (not (string=? time "")) (string=? (send b get-time) time) (void))))
-       (database))))
-        (dummy (append (dummy) result)))
-      result)))
-      
+       (database))])
+         (dummy (append (dummy) result))
+         result))
     (define/public (add-item name date cost venue time)
-      (cons 
+      (let ([dumm
+             (filter
+              (λ (b)
+                (and
+                 (string=? (send b get-band) name)
+                 (string=? (send b get-date) date)
+                 (equal? (send b get-cost) cost)
+                 (string=? (send b venue) venue)
+                 (string=? (send b time) time)))
+                (dummy))])
+        (future-ref (append (future-ref) dumm))
+        dumm))
+        
+                           
+              
+       
     (super-new)))
 
     
@@ -72,18 +87,29 @@
 
 
 (define p (new band% [band-name "A"] [date "12/09/2025"] [time "12"] [venue "London"] [cost 12] [password "123"]))
-(define a (new band% [band-name "B"] [date "12/09/2025"] [time "10"] [venue "Paris"] [cost 800] [password "124"]))
+(define d (new band% [band-name "B"] [date "12/09/2025"] [time "12"] [venue "Paris"] [cost 800] [password "124"]))
 
-(send p edit "A" "Madrid" "" "" "22")
 
 (define user1 (new people% [name "ramtin"] [surename "lll"]))
-(define results (send user1 search "" "12/09/2025" "" "" ""))
+
+(define result (send user1 search "" "12/09/2025" "" "" ""))
+(send user1 add-item "B" "12/09/2025" "12" 800 "Paris")
 
 (map (λ (b)
-       (list (send b get-band)
-             (send b get-date)
-             (send b get-time)
-             (send b get-venue)
-             (send b get-cost)
-             (send b get-pass)))
-     results)
+       (list
+        (send b get-band)
+        (send b get-date)
+        (send b get-time)
+        (send b get-cost)
+        (send b get-venue)))
+     (future-ref))
+       
+            
+             
+
+
+
+           
+
+
+
